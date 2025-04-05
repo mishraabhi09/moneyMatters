@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { DollarSign, User, Menu, LogOut, BarChart } from "lucide-react";
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Link, useLocation } from 'react-router-dom';
+import ThemeSwitcher from './ThemeSwitcher';
 
 const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
@@ -29,31 +29,43 @@ const Navbar: React.FC = () => {
     <>
       <Button 
         variant={isActive('/') ? "default" : "ghost"} 
-        className={isActive('/') ? "bg-teal-500 hover:bg-teal-600 text-white" : "text-navy-700 hover:text-navy-900 hover:bg-teal-50"}
+        className={isActive('/') ? "bg-primary hover:bg-primary/90" : ""}
         asChild
       >
         <Link to="/">Dashboard</Link>
       </Button>
       <Button 
-        variant={isActive('/insights') ? "default" : "ghost"} 
-        className={isActive('/insights') ? "bg-teal-500 hover:bg-teal-600 text-white" : "text-navy-700 hover:text-navy-900 hover:bg-teal-50"}
+        variant={isActive('/insights') ? "default" : "ghost"}
+        className={isActive('/insights') ? "bg-primary hover:bg-primary/90" : ""}
         asChild
       >
         <Link to="/insights">Insights</Link>
       </Button>
-      <Button variant="ghost" className="text-navy-700 hover:text-navy-900 hover:bg-teal-50">Goals</Button>
-      <Button variant="ghost" className="text-navy-700 hover:text-navy-900 hover:bg-teal-50">Habits</Button>
+      <Button 
+        variant={isActive('/goals') ? "default" : "ghost"}
+        className={isActive('/goals') ? "bg-primary hover:bg-primary/90" : ""}
+        asChild
+      >
+        <Link to="/goals">Goals</Link>
+      </Button>
+      <Button 
+        variant={isActive('/report') ? "default" : "ghost"}
+        className={isActive('/report') ? "bg-primary hover:bg-primary/90" : ""}
+        asChild
+      >
+        <Link to="/report">Report</Link>
+      </Button>
     </>
   );
 
   const userInitial = user?.email ? user.email[0].toUpperCase() : 'U';
 
   return (
-    <nav className="border-b border-gray-200 py-4 px-6 bg-white shadow-sm">
+    <nav className="border-b border-border py-4 px-6 bg-card">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <DollarSign className="h-6 w-6 text-teal-500" />
-          <span className="text-xl font-semibold text-navy-800">Mindful Money Mentor</span>
+          <DollarSign className="h-6 w-6 text-primary" />
+          <span className="text-xl font-semibold text-foreground">Mindful Money Mentor</span>
         </div>
 
         {isMobile ? (
@@ -84,28 +96,32 @@ const Navbar: React.FC = () => {
           </div>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar>
-                <AvatarFallback className="bg-teal-100 text-teal-700">
-                  {userInitial}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sign out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar>
+                  <AvatarFallback className="bg-primary/20 text-primary">
+                    {userInitial}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </nav>
   );
