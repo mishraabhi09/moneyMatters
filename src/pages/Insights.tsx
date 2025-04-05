@@ -1,13 +1,34 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+
+interface Expense {
+  id: number;
+  category: string;
+  amount: number;
+  date: string;
+  type: string;
+}
 
 // Sample expense data
-const expenseData = [
+const initialExpenseData: Expense[] = [
   { id: 1, category: 'Rent', amount: 1200, date: '2025-04-01', type: 'need' },
   { id: 2, category: 'Groceries', amount: 350, date: '2025-04-02', type: 'need' },
   { id: 3, category: 'Utilities', amount: 130, date: '2025-04-03', type: 'need' },
@@ -20,75 +41,191 @@ const expenseData = [
   { id: 10, category: 'Transportation', amount: 120, date: '2025-04-10', type: 'need' },
 ];
 
+// Available expense categories
+const expenseCategories = [
+  'Rent',
+  'Groceries',
+  'Utilities',
+  'Internet',
+  'Dining Out',
+  'Entertainment',
+  'Shopping',
+  'Subscription Services',
+  'Healthcare',
+  'Transportation',
+  'Insurance',
+  'Education',
+  'Travel',
+  'Gifts',
+  'Personal Care',
+  'Home Maintenance',
+  'Pet Care',
+  'Childcare',
+  'Other'
+];
+
 // Classification rules
-const needsCategories = ['Rent', 'Groceries', 'Utilities', 'Internet', 'Healthcare', 'Transportation', 'Insurance'];
+const needsCategories = ['Rent', 'Groceries', 'Utilities', 'Internet', 'Healthcare', 'Transportation', 'Insurance', 'Education', 'Childcare'];
 const isNeed = (category: string) => needsCategories.includes(category);
 
-// Calculate totals
-const calculateTotals = () => {
-  const needs = expenseData.filter(expense => isNeed(expense.category));
-  const wants = expenseData.filter(expense => !isNeed(expense.category));
-  
-  const needsTotal = needs.reduce((total, expense) => total + expense.amount, 0);
-  const wantsTotal = wants.reduce((total, expense) => total + expense.amount, 0);
-  
-  return {
-    needs,
-    wants,
-    needsTotal,
-    wantsTotal,
-    total: needsTotal + wantsTotal,
-    needsPercentage: Math.round((needsTotal / (needsTotal + wantsTotal)) * 100),
-    wantsPercentage: Math.round((wantsTotal / (needsTotal + wantsTotal)) * 100),
-  };
-};
-
 const Insights: React.FC = () => {
-  const { needs, wants, needsTotal, wantsTotal, total, needsPercentage, wantsPercentage } = calculateTotals();
+  const { theme } = useTheme();
+  const [expenses, setExpenses] = useState<Expense[]>(initialExpenseData);
+  const [manualTotal, setManualTotal] = useState('');
+  const [isEditingTotal, setIsEditingTotal] = useState(false);
+  
+  // State for adding/editing expenses
+  const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null);
+  const [newExpense, setNewExpense] = useState<Omit<Expense, 'id'>>({
+    category: '',
+    amount: 0,
+    date: new Date().toISOString().slice(0, 10),
+    type: 'need'
+  });
+  
+  // Calculate totals from expenses
+  const calculateTotals = () => {
+    const needs = expenses.filter(expense => expense.type === 'need');
+    const wants = expenses.filter(expense => expense.type === 'want');
+    
+    const needsTotal = needs.reduce((total, expense) => total + expense.amount, 0);
+    const wantsTotal = wants.reduce((total, expense) => total + expense.amount, 0);
+    
+    // If manual total is provided, use it; otherwise calculate from expenses
+    const calculatedTotal = needsTotal + wantsTotal;
+    const total = manualTotal && !isNaN(parseFloat(manualTotal)) 
+      ? parseFloat(manualTotal) 
+      : calculatedTotal;
+    
+    // Recalculate percentages based on total
+    const needsPercentage = total > 0 ? Math.round((needsTotal / total) * 100) : 0;
+    const wantsPercentage = total > 0 ? Math.round((wantsTotal / total) * 100) : 0;
+    const savingsPercentage = total > 0 ? Math.max(0, 100 - needsPercentage - wantsPercentage) : 0;
+    
+    return {
+      needs,
+      wants,
+      needsTotal,
+      wantsTotal,
+      total,
+      needsPercentage,
+      wantsPercentage,
+      savingsPercentage
+    };
+  };
+  
+  const { 
+    needs, 
+    wants, 
+    needsTotal, 
+    wantsTotal, 
+    total, 
+    needsPercentage, 
+    wantsPercentage,
+    savingsPercentage
+  } = calculateTotals();
   
   const pieData = [
-    { name: 'Needs', value: needsTotal, color: '#2dd4bf' },
-    { name: 'Wants', value: wantsTotal, color: '#f87171' },
-  ];
+    { name: 'Needs', value: needsTotal, color: theme === 'dark' ? '#2dd4bf' : '#14b8a6' },
+    { name: 'Wants', value: wantsTotal, color: theme === 'dark' ? '#f87171' : '#ef4444' },
+    { name: 'Savings', value: total - needsTotal - wantsTotal, color: theme === 'dark' ? '#60a5fa' : '#3b82f6' }
+  ].filter(item => item.value > 0);
 
+  // Handle adding a new expense
+  const handleAddExpense = () => {
+    if (!newExpense.category || newExpense.amount <= 0 || !newExpense.date) {
+      return; // Basic validation
+    }
+    
+    if (editingExpenseId !== null) {
+      // Editing existing expense
+      setExpenses(expenses.map(expense => 
+        expense.id === editingExpenseId 
+          ? { ...newExpense, id: editingExpenseId } 
+          : expense
+      ));
+    } else {
+      // Adding new expense
+      const newId = Math.max(0, ...expenses.map(e => e.id)) + 1;
+      setExpenses([...expenses, { ...newExpense, id: newId }]);
+    }
+    
+    // Reset form and close dialog
+    setNewExpense({
+      category: '',
+      amount: 0,
+      date: new Date().toISOString().slice(0, 10),
+      type: 'need'
+    });
+    setEditingExpenseId(null);
+    setIsExpenseDialogOpen(false);
+  };
+  
+  // Handle editing an expense
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpenseId(expense.id);
+    setNewExpense({
+      category: expense.category,
+      amount: expense.amount,
+      date: expense.date,
+      type: expense.type
+    });
+    setIsExpenseDialogOpen(true);
+  };
+  
+  // Handle deleting an expense
+  const handleDeleteExpense = (id: number) => {
+    setExpenses(expenses.filter(expense => expense.id !== id));
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-navy-800">Spending Insights</h1>
-          <p className="text-gray-600 mt-1">Understand your spending patterns and make better decisions</p>
+          <h1 className="text-3xl font-bold text-foreground">Spending Insights</h1>
+          <p className="text-muted-foreground mt-1">Understand your spending patterns and make better decisions</p>
         </header>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Total Spending</CardDescription>
+              <div className="flex justify-between items-center">
+                <CardDescription>Total Spending</CardDescription>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsEditingTotal(true)}
+                >
+                  <Edit2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
               <CardTitle className="text-2xl">₹{total.toLocaleString()}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-500">This month</p>
+              <p className="text-sm text-muted-foreground">This month</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Needs</CardDescription>
-              <CardTitle className="text-2xl text-teal-500">₹{needsTotal.toLocaleString()} ({needsPercentage}%)</CardTitle>
+              <CardTitle className="text-2xl text-primary">₹{needsTotal.toLocaleString()} ({needsPercentage}%)</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-500">Essentials for living</p>
+              <p className="text-sm text-muted-foreground">Essentials for living</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Wants</CardDescription>
-              <CardTitle className="text-2xl text-red-400">₹{wantsTotal.toLocaleString()} ({wantsPercentage}%)</CardTitle>
+              <CardTitle className="text-2xl text-destructive">₹{wantsTotal.toLocaleString()} ({wantsPercentage}%)</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-500">Non-essential spending</p>
+              <p className="text-sm text-muted-foreground">Non-essential spending</p>
             </CardContent>
           </Card>
         </div>
@@ -96,8 +233,8 @@ const Insights: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Needs vs Wants</CardTitle>
-              <CardDescription>Visualization of your spending distribution</CardDescription>
+              <CardTitle>Spending Distribution</CardTitle>
+              <CardDescription>Visualization of your spending breakdown</CardDescription>
             </CardHeader>
             <CardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -117,7 +254,7 @@ const Insights: React.FC = () => {
                     ))}
                   </Pie>
                   <Legend />
-                  <Tooltip formatter={(value) => `₹${value}`} />
+                  <Tooltip formatter={(value) => `₹${value.toLocaleString()}`} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -125,8 +262,8 @@ const Insights: React.FC = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Spending Categories</CardTitle>
-              <CardDescription>50/30/20 Rule Analysis</CardDescription>
+              <CardTitle>50/30/20 Rule Analysis</CardTitle>
+              <CardDescription>Needs / Wants / Savings Budget Rule</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -135,13 +272,13 @@ const Insights: React.FC = () => {
                     <span className="text-sm font-medium">Needs (Target: 50%)</span>
                     <span className="text-sm font-medium">{needsPercentage}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full ${needsPercentage > 60 ? 'bg-amber-500' : 'bg-teal-500'}`} 
+                      className={`h-2 rounded-full ${needsPercentage > 60 ? 'bg-amber-500' : 'bg-primary'}`} 
                       style={{ width: `${needsPercentage}%` }}
                     ></div>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {needsPercentage > 60 
                       ? 'Your essential spending is higher than recommended. Consider reviewing your fixed expenses.' 
                       : 'Your essential spending is within recommended limits.'}
@@ -153,13 +290,13 @@ const Insights: React.FC = () => {
                     <span className="text-sm font-medium">Wants (Target: 30%)</span>
                     <span className="text-sm font-medium">{wantsPercentage}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full ${wantsPercentage > 40 ? 'bg-red-500' : 'bg-teal-500'}`} 
+                      className={`h-2 rounded-full ${wantsPercentage > 40 ? 'bg-destructive' : 'bg-primary'}`} 
                       style={{ width: `${wantsPercentage}%` }}
                     ></div>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {wantsPercentage > 40 
                       ? 'Your discretionary spending is higher than recommended. Look for ways to reduce non-essential expenses.' 
                       : 'Your discretionary spending is within recommended limits.'}
@@ -169,16 +306,16 @@ const Insights: React.FC = () => {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm font-medium">Savings (Target: 20%)</span>
-                    <span className="text-sm font-medium">{100 - needsPercentage - wantsPercentage}%</span>
+                    <span className="text-sm font-medium">{savingsPercentage}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full ${100 - needsPercentage - wantsPercentage < 15 ? 'bg-red-500' : 'bg-teal-500'}`} 
-                      style={{ width: `${100 - needsPercentage - wantsPercentage}%` }}
+                      className={`h-2 rounded-full ${savingsPercentage < 15 ? 'bg-destructive' : 'bg-primary'}`} 
+                      style={{ width: `${savingsPercentage}%` }}
                     ></div>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {100 - needsPercentage - wantsPercentage < 15 
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {savingsPercentage < 15 
                       ? 'Your savings rate is below recommended levels. Try to increase your savings by reducing expenses.' 
                       : 'Your savings rate is within recommended limits.'}
                   </p>
@@ -190,8 +327,25 @@ const Insights: React.FC = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Expense Details</CardTitle>
-            <CardDescription>Detailed breakdown of all expenses</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Expense Details</CardTitle>
+                <CardDescription>Detailed breakdown of all expenses</CardDescription>
+              </div>
+              <Button onClick={() => {
+                setEditingExpenseId(null);
+                setNewExpense({
+                  category: '',
+                  amount: 0,
+                  date: new Date().toISOString().slice(0, 10),
+                  type: 'need'
+                });
+                setIsExpenseDialogOpen(true);
+              }}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="all">
@@ -201,31 +355,169 @@ const Insights: React.FC = () => {
                 <TabsTrigger value="wants">Wants</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
-                <ExpenseTable expenses={expenseData} />
+                <ExpenseTable 
+                  expenses={expenses} 
+                  onEdit={handleEditExpense}
+                  onDelete={handleDeleteExpense}
+                />
               </TabsContent>
               <TabsContent value="needs">
-                <ExpenseTable expenses={needs} />
+                <ExpenseTable 
+                  expenses={needs} 
+                  onEdit={handleEditExpense}
+                  onDelete={handleDeleteExpense}
+                />
               </TabsContent>
               <TabsContent value="wants">
-                <ExpenseTable expenses={wants} />
+                <ExpenseTable 
+                  expenses={wants} 
+                  onEdit={handleEditExpense}
+                  onDelete={handleDeleteExpense}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
       </main>
+      
+      {/* Total Spending Dialog */}
+      <Dialog open={isEditingTotal} onOpenChange={setIsEditingTotal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Total Spending</DialogTitle>
+            <DialogDescription>
+              Enter your total spending amount for this month
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="totalSpending">Total Spending (₹)</Label>
+              <Input
+                id="totalSpending"
+                type="number"
+                min="0"
+                value={manualTotal}
+                onChange={(e) => setManualTotal(e.target.value)}
+                placeholder="Enter total amount"
+              />
+              <p className="text-sm text-muted-foreground">
+                Leave empty to automatically calculate from expenses
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setManualTotal('');
+              setIsEditingTotal(false);
+            }}>
+              Reset
+            </Button>
+            <Button onClick={() => setIsEditingTotal(false)}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add/Edit Expense Dialog */}
+      <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingExpenseId !== null ? 'Edit Expense' : 'Add New Expense'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingExpenseId !== null 
+                ? 'Update the expense details below' 
+                : 'Enter the details of your expense'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={newExpense.category}
+                onValueChange={(value) => setNewExpense({
+                  ...newExpense,
+                  category: value,
+                  type: isNeed(value) ? 'need' : 'want'
+                })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {expenseCategories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      <div className="flex items-center gap-2">
+                        <span className={isNeed(category) ? 'text-primary' : 'text-destructive'}>•</span>
+                        <span>{category}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="amount">Amount (₹)</Label>
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                value={newExpense.amount}
+                onChange={(e) => setNewExpense({...newExpense, amount: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={newExpense.date}
+                onChange={(e) => setNewExpense({...newExpense, date: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="type">Type</Label>
+              <Select
+                value={newExpense.type}
+                onValueChange={(value: 'need' | 'want') => setNewExpense({...newExpense, type: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="need">Need (Essential)</SelectItem>
+                  <SelectItem value="want">Want (Discretionary)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExpenseDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddExpense}>
+              {editingExpenseId !== null ? 'Update' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-interface Expense {
-  id: number;
-  category: string;
-  amount: number;
-  date: string;
-  type: string;
+interface ExpenseTableProps {
+  expenses: Expense[];
+  onEdit: (expense: Expense) => void;
+  onDelete: (id: number) => void;
 }
 
-const ExpenseTable: React.FC<{ expenses: Expense[] }> = ({ expenses }) => {
+const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, onEdit, onDelete }) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -235,25 +527,44 @@ const ExpenseTable: React.FC<{ expenses: Expense[] }> = ({ expenses }) => {
             <TableHead>Amount</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Type</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {expenses.map((expense) => (
-            <TableRow key={expense.id}>
-              <TableCell>{expense.category}</TableCell>
-              <TableCell>₹{expense.amount.toLocaleString()}</TableCell>
-              <TableCell>{expense.date}</TableCell>
-              <TableCell>
-                <span 
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    expense.type === 'need' ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {expense.type === 'need' ? 'Need' : 'Want'}
-                </span>
+          {expenses.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                No expenses found
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            expenses.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>{expense.category}</TableCell>
+                <TableCell>₹{expense.amount.toLocaleString()}</TableCell>
+                <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <span 
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      expense.type === 'need' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'
+                    }`}
+                  >
+                    {expense.type === 'need' ? 'Need' : 'Want'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(expense)}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2">
           <DollarSign className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold text-foreground">Mindful Money Mentor</span>
+          <span className="text-xl font-semibold text-foreground">Money Matters</span>
         </div>
 
         {isMobile ? (

@@ -206,14 +206,15 @@ const GoalSetting: React.FC = () => {
             ))
           )}
 
-          <Button 
+          {/* <Button 
             variant="outline" 
             className="w-full border border-dashed border-border py-6 text-muted-foreground hover:text-primary hover:border-primary flex items-center justify-center group"
             onClick={() => setIsAddGoalDialogOpen(true)}
           >
             <PlusCircle className="h-5 w-5 mr-2 group-hover:text-primary" />
             Add another financial goal
-          </Button>
+          </Button> */}
+          
         </CardContent>
       </Card>
       
