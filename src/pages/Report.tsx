@@ -9,13 +9,11 @@ const Report: React.FC = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">User Testing Report</h1>
-          <p className="text-muted-foreground mt-1">Detailed analysis of user behavior changes</p>
+          <h1 className="text-3xl font-bold text-foreground">Reports & Analysis</h1>
+          <p className="text-muted-foreground mt-1">Comprehensive reporting on user behavior</p>
         </header>
         
-        <section className="mb-8 animate-fade-in">
-          <UserReport />
-        </section>
+        <UserReport />
       </main>
       
       <footer className="border-t mt-16 py-8 bg-muted/50">

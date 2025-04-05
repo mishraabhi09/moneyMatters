@@ -1,3 +1,54 @@
+// import React from 'react';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// // import { UserReport } from "@/components/UserReport";
+// // import { SpendingBreakdown } from "@/components/SpendingBreakdown";
+// // import { SavingsGoals } from "@/components/SavingsGoals";
+
+// const InsightsPage = () => {
+//   return (
+//     <div className="container mx-auto py-6 space-y-8">
+//       <div>
+//         <h1 className="text-3xl font-bold tracking-tight">Insights</h1>
+//         <p className="text-muted-foreground">
+//           Analyze your financial behavior and track your progress towards goals.
+//         </p>
+//       </div>
+
+//       <Tabs defaultValue="spending" className="space-y-4">
+//         <TabsList>
+//           <TabsTrigger value="spending">Spending Analysis</TabsTrigger>
+//           <TabsTrigger value="goals">Savings Goals</TabsTrigger>
+//           <TabsTrigger value="report">User Report</TabsTrigger>
+//         </TabsList>
+        
+//         {/* <TabsContent value="spending" className="space-y-4">
+//           <SpendingBreakdown />
+//         </TabsContent>
+
+//         <TabsContent value="goals" className="space-y-4">
+//           <SavingsGoals />
+//         </TabsContent>
+
+//         <TabsContent value="report" className="space-y-4">
+//           <UserReport />
+//         </TabsContent> */}
+//       </Tabs>
+//     </div>
+//   );
+// };
+
+// export default InsightsPage;
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +66,18 @@ import {
   DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { PlusCircle, Edit2, Trash2, AlertTriangle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Expense {
@@ -68,11 +129,74 @@ const expenseCategories = [
 const needsCategories = ['Rent', 'Groceries', 'Utilities', 'Internet', 'Healthcare', 'Transportation', 'Insurance', 'Education', 'Childcare'];
 const isNeed = (category: string) => needsCategories.includes(category);
 
+interface ExpenseTableProps {
+  expenses: Expense[];
+  onEdit: (expense: Expense) => void;
+  onDelete: (id: number) => void;
+}
+
+const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, onEdit, onDelete }) => {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Category</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {expenses.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                No expenses found
+              </TableCell>
+            </TableRow>
+          ) : (
+            expenses.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>{expense.category}</TableCell>
+                <TableCell>₹{expense.amount.toLocaleString()}</TableCell>
+                <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <span 
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      expense.type === 'need' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'
+                    }`}
+                  >
+                    {expense.type === 'need' ? 'Need' : 'Want'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(expense)}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+const EXPENSE_THRESHOLD = 30000;
+
 const Insights: React.FC = () => {
   const { theme } = useTheme();
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenseData);
   const [manualTotal, setManualTotal] = useState('');
   const [isEditingTotal, setIsEditingTotal] = useState(false);
+  const [showThresholdAlert, setShowThresholdAlert] = useState(false);
   
   // State for adding/editing expenses
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
@@ -84,7 +208,7 @@ const Insights: React.FC = () => {
     type: 'need'
   });
   
-  // Calculate totals from expenses
+  // Calculate totals and check threshold
   const calculateTotals = () => {
     const needs = expenses.filter(expense => expense.type === 'need');
     const wants = expenses.filter(expense => expense.type === 'want');
@@ -92,13 +216,16 @@ const Insights: React.FC = () => {
     const needsTotal = needs.reduce((total, expense) => total + expense.amount, 0);
     const wantsTotal = wants.reduce((total, expense) => total + expense.amount, 0);
     
-    // If manual total is provided, use it; otherwise calculate from expenses
     const calculatedTotal = needsTotal + wantsTotal;
     const total = manualTotal && !isNaN(parseFloat(manualTotal)) 
       ? parseFloat(manualTotal) 
       : calculatedTotal;
     
-    // Recalculate percentages based on total
+    // Check if total exceeds threshold
+    if (total >= EXPENSE_THRESHOLD && !showThresholdAlert) {
+      setShowThresholdAlert(true);
+    }
+    
     const needsPercentage = total > 0 ? Math.round((needsTotal / total) * 100) : 0;
     const wantsPercentage = total > 0 ? Math.round((wantsTotal / total) * 100) : 0;
     const savingsPercentage = total > 0 ? Math.max(0, 100 - needsPercentage - wantsPercentage) : 0;
@@ -132,26 +259,31 @@ const Insights: React.FC = () => {
     { name: 'Savings', value: total - needsTotal - wantsTotal, color: theme === 'dark' ? '#60a5fa' : '#3b82f6' }
   ].filter(item => item.value > 0);
 
-  // Handle adding a new expense
+  // Handle adding a new expense with threshold check
   const handleAddExpense = () => {
     if (!newExpense.category || newExpense.amount <= 0 || !newExpense.date) {
-      return; // Basic validation
+      return;
     }
     
+    let updatedExpenses;
     if (editingExpenseId !== null) {
-      // Editing existing expense
-      setExpenses(expenses.map(expense => 
+      updatedExpenses = expenses.map(expense => 
         expense.id === editingExpenseId 
           ? { ...newExpense, id: editingExpenseId } 
           : expense
-      ));
+      );
     } else {
-      // Adding new expense
       const newId = Math.max(0, ...expenses.map(e => e.id)) + 1;
-      setExpenses([...expenses, { ...newExpense, id: newId }]);
+      updatedExpenses = [...expenses, { ...newExpense, id: newId }];
     }
     
-    // Reset form and close dialog
+    // Calculate new total before updating state
+    const newTotal = updatedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    if (newTotal >= EXPENSE_THRESHOLD) {
+      setShowThresholdAlert(true);
+    }
+    
+    setExpenses(updatedExpenses);
     setNewExpense({
       category: '',
       amount: 0,
@@ -507,66 +639,43 @@ const Insights: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
 
-interface ExpenseTableProps {
-  expenses: Expense[];
-  onEdit: (expense: Expense) => void;
-  onDelete: (id: number) => void;
-}
-
-const ExpenseTable: React.FC<ExpenseTableProps> = ({ expenses, onEdit, onDelete }) => {
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Category</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {expenses.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                No expenses found
-              </TableCell>
-            </TableRow>
-          ) : (
-            expenses.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell>{expense.category}</TableCell>
-                <TableCell>₹{expense.amount.toLocaleString()}</TableCell>
-                <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <span 
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      expense.type === 'need' ? 'bg-primary/20 text-primary' : 'bg-destructive/20 text-destructive'
-                    }`}
-                  >
-                    {expense.type === 'need' ? 'Need' : 'Want'}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(expense)}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(expense.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+      {/* Threshold Alert Dialog */}
+      <AlertDialog open={showThresholdAlert} onOpenChange={setShowThresholdAlert}>
+        <AlertDialogContent className="border-2 border-red-500">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-500">
+              <AlertTriangle className="h-6 w-6 text-red-500" />
+              Monthly Expense Alert!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              <div className="text-red-500 font-semibold mb-2">
+                Warning: High Monthly Expenses!
+              </div>
+              <div>
+                Your monthly expenses have reached <span className="font-bold text-red-500">₹{EXPENSE_THRESHOLD.toLocaleString()}</span>. 
+                This is above your set threshold limit.
+              </div>
+              <div className="mt-2 text-red-400">
+                Recommended Actions:
+                <ul className="list-disc ml-4 mt-1">
+                  <li>Review your recent expenses</li>
+                  <li>Identify non-essential spending</li>
+                  <li>Consider budget adjustments</li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex justify-end gap-2">
+            <Button 
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2"
+              onClick={() => setShowThresholdAlert(false)}
+            >
+              I Understand
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

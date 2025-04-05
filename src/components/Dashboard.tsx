@@ -140,32 +140,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onIncomeUpdate }) => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Behavioral Insight Card */}
-        <Card className="col-span-1 md:col-span-2 lg:col-span-4 bg-gradient-to-r from-secondary/10 to-primary/10">
-          <CardHeader>
-            <CardTitle>AI Behavioral Insight</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-1" />
-              <p className="text-card-foreground">
-                {financialData.insightMessage} <br />
-                <span className="text-sm text-muted-foreground">
-                  Try setting a dining budget and tracking each meal to create awareness of this spending pattern.
-                </span>
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="text-card-foreground">
-                See Details
-              </Button>
-              <Button className="bg-primary hover:bg-primary/90">
-                Set Budget
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Edit Balance Dialog */}
