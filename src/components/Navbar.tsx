@@ -55,6 +55,13 @@ const Navbar: React.FC = () => {
       >
         <Link to="/report">Report</Link>
       </Button>
+      <Button 
+        variant={isActive('/guardian-connect') ? "default" : "ghost"}
+        className={isActive('/guardian-connect') ? "bg-primary hover:bg-primary/90" : ""}
+        asChild
+      >
+        <Link to="/guardian-connect">Guardian Connect</Link>
+      </Button>
     </>
   );
 
