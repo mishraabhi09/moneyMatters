@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Dashboard from '@/components/Dashboard';
 import SpendingChart from '@/components/SpendingChart';
 import FinancialChatbot from '@/components/FinancialChatbot';
+import FinancialCalendar from '@/components/FinancialCalendar';
 
 const Index: React.FC = () => {
   const [monthlyIncome, setMonthlyIncome] = useState(5200);
@@ -26,13 +27,17 @@ const Index: React.FC = () => {
           <Dashboard onIncomeUpdate={handleIncomeUpdate} />
         </section>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           <section className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <SpendingChart monthlyIncome={monthlyIncome} />
           </section>
           
           <section className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <FinancialChatbot />
+          </section>
+
+          <section className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <FinancialCalendar />
           </section>
         </div>
       </main>

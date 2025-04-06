@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonner } from 'sonner';
 
 interface AuthContextType {
   session: Session | null;
@@ -21,6 +22,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
+  const showDailyCheckIn = () => {
+    const lastCheckIn = localStorage.getItem('lastCheckIn');
+    const today = new Date().toDateString();
+    
+    if (lastCheckIn !== today) {
+      sonner.success('Daily Check-in +1', {
+        description: 'Keep up the great work with your financial goals!',
+        position: 'top-right'
+      });
+      localStorage.setItem('lastCheckIn', today);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -36,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               title: "Welcome back!",
               description: "You've successfully signed in."
             });
+            showDailyCheckIn();
             navigate('/');
           }
         } else {
