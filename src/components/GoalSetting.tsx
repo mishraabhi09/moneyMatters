@@ -14,7 +14,9 @@ import {
   GraduationCap,
   Bike,
   HeartPulse,
-  Palmtree
+  Palmtree,
+  Plus,
+  Minus
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -137,6 +139,16 @@ const GoalSetting: React.FC = () => {
     setGoals(goals.filter(goal => goal.id !== goalId));
   };
   
+  const handleUpdateAmount = (goalId: string, amount: number) => {
+    setGoals(goals.map(goal => {
+      if (goal.id === goalId) {
+        const newAmount = Math.max(0, Math.min(goal.target, goal.current + amount));
+        return { ...goal, current: newAmount };
+      }
+      return goal;
+    }));
+  };
+  
   const formatDate = (isoDate: string): string => {
     if (!isoDate) return '';
     const date = new Date(isoDate);
@@ -180,8 +192,26 @@ const GoalSetting: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="text-sm font-medium">
-                      ₹{goal.current.toLocaleString()} / ₹{goal.target.toLocaleString()}
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleUpdateAmount(goal.id, -1000)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <div className="text-sm font-medium min-w-[120px] text-center">
+                        ₹{goal.current.toLocaleString()} / ₹{goal.target.toLocaleString()}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleUpdateAmount(goal.id, 1000)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteGoal(goal.id)}>
                       <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
