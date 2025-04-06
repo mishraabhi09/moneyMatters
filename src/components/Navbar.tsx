@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { DollarSign, User, Menu, LogOut, BarChart } from "lucide-react";
+import { DollarSign, User, Menu, LogOut, BarChart, Crown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,6 +97,17 @@ const Navbar: React.FC = () => {
         )}
 
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 hover:text-amber-700 border-amber-500/20"
+            asChild
+          >
+            <Link to="/subscription" className="flex items-center gap-1">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Upgrade</span>
+            </Link>
+          </Button>
+          
           <ThemeSwitcher />
           
           <DropdownMenu>

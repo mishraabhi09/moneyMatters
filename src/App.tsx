@@ -13,6 +13,8 @@ import Insights from "./pages/Insights";
 import Report from "./pages/Report";
 import Goals from "./pages/Goals";
 
+import Subscription from "./pages/Subscription";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -45,6 +47,11 @@ const App = () => (
                   <Goals />
                 </ProtectedRoute>
               } />
+              <Route path="/subscription" element={
+                <ProtectedRoute>
+                  <Subscription />
+                </ProtectedRoute>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -56,3 +63,5 @@ const App = () => (
 );
 
 export default App;
+
+
