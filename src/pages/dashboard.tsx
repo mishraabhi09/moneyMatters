@@ -1,8 +1,10 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PricingPlans from '@/components/PricingPlans';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Crown } from "lucide-react";
+import Link from 'next/link';
 
 const Dashboard = () => {
   return (
@@ -56,13 +58,6 @@ const Dashboard = () => {
               </Tabs>
             </CardContent>
           </Card>
-
-          {/* Pricing Plans Section */}
-          <section className="bg-muted/50 py-12 -mx-4 sm:-mx-6">
-            <div className="container mx-auto">
-              <PricingPlans />
-            </div>
-          </section>
         </div>
       </main>
 
