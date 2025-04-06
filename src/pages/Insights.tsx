@@ -642,7 +642,15 @@ const Insights: React.FC = () => {
 
       {/* Threshold Alert Dialog */}
       <AlertDialog open={showThresholdAlert} onOpenChange={setShowThresholdAlert}>
-        <AlertDialogContent className="border-2 border-red-500">
+        <AlertDialogContent 
+          className="border-2 border-red-500"
+          onClick={(e) => {
+            // Only close if clicking the backdrop (not the content)
+            if (e.target === e.currentTarget) {
+              setShowThresholdAlert(false);
+            }
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-500">
               <AlertTriangle className="h-6 w-6 text-red-500" />

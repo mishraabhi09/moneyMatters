@@ -5,7 +5,28 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://yzjekwpntfcjsvdgzdir.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6amVrd3BudGZjanN2ZGd6ZGlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODg5MDQsImV4cCI6MjA1OTM2NDkwNH0.dIpSybDRasdVfbLOJd0xB7N2k-4Ey58D45viAaDgjRU";
 
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Missing Supabase environment variables');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// Create the Supabase client with additional options
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'x-application-name': 'money-matters'
+    }
+  }
+});
+
+// Add error handling for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth state changed:', event, session?.user?.email);
+});
