@@ -34,6 +34,7 @@ const SpendingChart: React.FC<SpendingChartProps> = ({ monthlyIncome = 5200 }) =
   }>>([]);
 
   // Calculate spending data based on monthly income
+  
   useEffect(() => {
     const newSpendingData = initialSpendingCategories.map(item => ({
       ...item,

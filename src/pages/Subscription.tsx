@@ -16,7 +16,9 @@ const Subscription: React.FC = () => {
         </header>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+
           {/* Free Plan */}
+
           <Card className="border-2">
             <CardHeader>
               <CardTitle>Free</CardTitle>
@@ -42,7 +44,7 @@ const Subscription: React.FC = () => {
                 </li>
                 <li className="flex items-center text-muted-foreground">
                   <Check className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span>Advanced analytics</span>
+                  <span>Guardian Connect</span>
                 </li>
                 <li className="flex items-center text-muted-foreground">
                   <Check className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -56,6 +58,7 @@ const Subscription: React.FC = () => {
           </Card>
           
           {/* Pro Plan */}
+
           <Card className="border-2 border-primary relative">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
               Popular
@@ -84,12 +87,13 @@ const Subscription: React.FC = () => {
                 </li>
                 <li className="flex items-center">
                   <Check className="h-4 w-4 mr-2 text-primary" />
-                  <span>Advanced analytics</span>
+                  <span>Guardian Connect</span>
                 </li>
                 <li className="flex items-center">
                   <Check className="h-4 w-4 mr-2 text-primary" />
                   <span>AI financial advisor</span>
                 </li>
+               
               </ul>
             </CardContent>
             <CardFooter>
@@ -98,6 +102,7 @@ const Subscription: React.FC = () => {
           </Card>
           
           {/* Enterprise Plan */}
+
           <Card className="border-2">
             <CardHeader>
               <CardTitle>Enterprise</CardTitle>
@@ -127,7 +132,11 @@ const Subscription: React.FC = () => {
                 </li>
                 <li className="flex items-center">
                   <Check className="h-4 w-4 mr-2 text-primary" />
-                  <span>Dedicated financial advisor</span>
+                  <span>Guardian Connect</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-4 w-4 mr-2 text-primary" />
+                  <span>Personalized financial advisor</span>
                 </li>
               </ul>
             </CardContent>

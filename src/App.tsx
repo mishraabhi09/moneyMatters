@@ -12,7 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Insights from "./pages/Insights";
 import Report from "./pages/Report";
 import Goals from "./pages/Goals";
-
+import GuardianConnect from "./pages/guardian-connect";
 import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
@@ -45,6 +45,11 @@ const App = () => (
               <Route path="/goals" element={
                 <ProtectedRoute>
                   <Goals />
+                </ProtectedRoute>
+              } />
+              <Route path="/guardian-connect" element={
+                <ProtectedRoute>
+                  <GuardianConnect />
                 </ProtectedRoute>
               } />
               <Route path="/subscription" element={
