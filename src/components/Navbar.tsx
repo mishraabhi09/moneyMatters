@@ -62,6 +62,16 @@ const Navbar: React.FC = () => {
       >
         <Link to="/guardian-connect">Guardian Connect</Link>
       </Button>
+      <Button 
+        variant={isActive('/my-account') ? "default" : "ghost"}
+        className={`${isActive('/my-account') ? "bg-primary hover:bg-primary/90" : ""} flex items-center gap-2`}
+        asChild
+      >
+        <Link to="/my-account">
+          <User className="h-4 w-4" />
+          <span>{user?.user_metadata?.username || user?.email?.split('@')[0] || 'Account'}</span>
+        </Link>
+      </Button>
     </>
   );
 
@@ -130,8 +140,12 @@ const Navbar: React.FC = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/profile">Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/my-account">Settings</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="mr-2 h-4 w-4" />

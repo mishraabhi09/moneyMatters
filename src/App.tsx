@@ -14,6 +14,9 @@ import Report from "./pages/Report";
 import Goals from "./pages/Goals";
 import GuardianConnect from "./pages/guardian-connect";
 import Subscription from "./pages/Subscription";
+import MyAccount from '@/pages/MyAccount';
+import Profile from '@/pages/Profile';
+import Settings from '@/pages/Settings';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +60,9 @@ const App = () => (
                   <Subscription />
                 </ProtectedRoute>
               } />
+              <Route path="/my-account" element={<ProtectedRoute><MyAccount /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
